@@ -1,8 +1,0 @@
-{
-  "dependencies": {
-    "fs": "^0.0.1-security",
-    "gd-level-to-json": "^1.1.1",
-    "graceful-fs": "^4.2.11",
-    "path": "^0.12.7"
-  }
-}
