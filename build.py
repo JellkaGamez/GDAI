@@ -98,20 +98,9 @@ for level in levels:
     level_data = text_after(level_data, ';')
     level_tokens = level_data.split(';')
 
-    object_conversions = {
-        1: 'block',
-        2: 'block-grid-edge',
-        5: 'block-grid-center',
-        8: 'spike-full',
-        39: 'spike-half',
-        36: 'orb-yellow',
-        35: 'pad-yellow',
-        10: 'portal-gravity-normal',
-        11: 'portal-gravity-reverse',
-        12: 'portal-cube',
-        13: 'portal-ship',
-        3847: 'collectable-star-green'
-    }
+    obj_properties = []
+    with open('objects/objectProperties.json', 'r') as f:
+        obj_properties = json.load(f)
 
     for token in level_tokens:
         tokens = token.split(',')
@@ -131,33 +120,10 @@ for level in levels:
             print("Invalid OBJ") if debug == 'y' else None
             continue
 
-        # check if it's supported
-        if int(obj_json['1']) not in object_conversions:
-            print(f'[WARNING] Object type {obj_json["1"]} is not supported!') if debug == 'y' else None
-            continue
-
         out_json = {}
 
         for key in obj_json:
-            match key:
-                case '1':
-                    out_json['id'] = object_conversions[int(obj_json[key])]
-                case '2':
-                    out_json['x'] = round(int(obj_json[key]) / 30, 2)
-                case '3':
-                    y = int(obj_json[key]) / 30
-                    # exceptions
-                    if out_json['id'] == 'spike-half':
-                        y -= 0.25
-                    if out_json['id'] == 'pad-yellow':
-                        y -= 0.4
-                    out_json['y'] = round(y, 2)
-                case '4':
-                    out_json['flipX'] = True if int(obj_json[key]) == 1 else False
-                case '5':
-                    out_json['flipY'] = True if int(obj_json[key]) == 1 else False
-                case '6':
-                    out_json['rotation'] = int(obj_json[key])
+            out_json[obj_properties[key]] = obj_json[key]
 
         level_code.append(out_json)
 
@@ -193,38 +159,10 @@ for level in levels:
     last_obj = level_code[-1]
     length = last_obj['x'] / SPEED
 
-    diff_est = 0
-    diff_est += spike_count / (length * 1)
-    diff_est += pad_count / (length * 0.5)
-    diff_est += orb_count / (length * 0.35)
-    diff_est = round(diff_est, 2)
-
-    # get the closest difficulty
-    diff = ''
-    diff_dist = math.inf
-
-    for key in difficulties:
-        if abs(difficulties[key] - diff_est) < diff_dist:
-            diff_dist = abs(difficulties[key] - diff_est)
-            diff = key
-
-    stats = {
-        'spikes': spike_count,
-        'spikes-second': round(spike_count / length, 2),
-        'orbs': orb_count,
-        'orbs-second': round(orb_count / length, 2),
-        'pads': pad_count,
-        'pads-second': round(pad_count / length, 2),
-        'length': round(length, 2),
-        'difficulty_est': round(diff_est, 2),
-        'difficulty': diff,
-        'difficulty-margin': round(diff_dist, 2)
-    }
-
     level_json = json.dumps({
         'name': name,
         'meta': json_meta_data,
-        'stats': stats,
+        'length': length,
         'level': level_code,
         # 'raw': level_data_raw
     })
