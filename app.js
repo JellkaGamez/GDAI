@@ -4,12 +4,11 @@ const convert = require("gd-level-to-json");
 
 // text after
 function after(text, after) {
-    return text.substring(text.indexOf(after) + after.length);
+    return text.toString().substring(text.toString().indexOf(after) + after.length);
 }
 
-// text before
 function before(text, before) {
-    return text.substring(0, text.indexOf(before));
+    return text.toString().substring(0, text.toString().indexOf(before));
 }
 
 // take raw level data from levels folder and put it in levels_data folder
