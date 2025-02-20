@@ -127,34 +127,6 @@ for level in levels:
 
         level_code.append(out_json)
 
-    difficulties = {
-        'beginner': 1.5,
-        'easy': 2,
-        'tricky': 2.5,
-        'normal': 3,
-        # todo: add rest of the 23 difficulties
-    }
-
-    # count spikes
-    spike_count = 0
-    for obj in level_code:
-        if obj['id'] == 'spike-full':
-            spike_count += 1
-        elif obj['id'] == 'spike-half':
-            spike_count += 0.5
-
-    # count pads
-    pad_count = 0
-    for obj in level_code:
-        if obj['id'] == 'pad-yellow':
-            pad_count += 1
-
-    # count orbs
-    orb_count = 0
-    for obj in level_code:
-        if obj['id'] == 'orb-yellow':
-            orb_count += 1
-
     # get the last object
     last_obj = level_code[-1]
     length = last_obj['x'] / SPEED
