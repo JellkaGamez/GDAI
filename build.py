@@ -123,13 +123,18 @@ for level in levels:
         out_json = {}
 
         for key in obj_json:
-            out_json[obj_properties[key]] = obj_json[key]
+            try:
+                prop_index = obj_properties[int(key)]
+            except:
+                print(f'Property {key} not found!')
+                continue
+            out_json[prop_index] = obj_json[key]
 
         level_code.append(out_json)
 
     # get the last object
     last_obj = level_code[-1]
-    length = last_obj['x'] / SPEED
+    length = round(float(last_obj['x'])) / SPEED
 
     level_json = json.dumps({
         'name': name,
