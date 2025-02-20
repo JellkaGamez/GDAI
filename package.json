@@ -1,0 +1,5 @@
+{
+  "dependencies": {
+    "gd-level-to-json": "^1.1.1"
+  }
+}
