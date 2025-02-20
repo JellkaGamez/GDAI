@@ -20,7 +20,7 @@ fs.readdirSync(path.join(__dirname, "levels")).forEach((file) => {
         level = after(level, "<s>");
         level = after(level, "<s>");
         level = before(level, "</s>");
-        fs.writeFileSync(path.join(__dirname, "levels_data", name + ".json"), level.toString());
+        fs.writeFileSync(path.join(__dirname, "levels_data", name + ".gmd"), level);
     }
 });
 
