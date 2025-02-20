@@ -126,8 +126,9 @@ for level in levels:
             try:
                 prop_index = obj_properties[int(key)]
             except:
-                print(f'Property {key} not found!')
+                print(f'Property {key} not found!')if debug == 'y' else None
                 continue
+
             out_json[prop_index] = obj_json[key]
 
         level_code.append(out_json)
