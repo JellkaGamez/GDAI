@@ -137,6 +137,13 @@ for level in levels:
     # strip level json down to the level data
     level_train = level_code
 
+    for obj in level_train:
+        out = []
+        for key in obj:
+            out.append(f"{key}:{obj[key]}")
+        level_train[obj] = out
+
+
     # get the last object
     last_obj = level_code[-1]
     length = round(float(last_obj['x'])) / SPEED

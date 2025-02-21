@@ -1,2 +1,2 @@
 @echo off
-pip install keras numpy librosa
+pip install torch
