@@ -145,6 +145,8 @@ for level in levels:
         # 'raw': level_data_raw
     })
 
+    # convert the level data. This will be hell
+
     # save level json
     with open(f'levels/json/{name}.json', 'w') as f:
         f.write(level_json)
