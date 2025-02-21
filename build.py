@@ -136,12 +136,13 @@ for level in levels:
 
     # strip level json down to the level data
     level_train = level_code
+    final_train = []
 
     for obj in level_train:
         out = []
         for key in obj:
             out.append(f"{key}:{obj[key]}")
-        level_train[obj] = out
+        final_train.append(out)
 
 
     # get the last object
@@ -158,7 +159,7 @@ for level in levels:
 
     # save level train to data
     with open(f'data/{name}.json', 'w') as f:
-        f.write(json.dumps(level_train))
+        f.write(json.dumps(final_train))
 
     # save level json
     with open(f'levels/json/{name}.json', 'w') as f:
