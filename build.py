@@ -6,17 +6,6 @@ def text_after(text, after):
 def text_before(text, before):
     return text[:text.find(before)]
 
-def convert_hsv_to_rgb(hsv_string):
-    # Convert a string like "0a0.5a2a0a0" to an RGB-like format
-    if hsv_string:
-        parts = hsv_string.split('a')
-        return {
-            'h': float(parts[0]),  # Hue
-            's': float(parts[1]),  # Saturation
-            'v': float(parts[2]),  # Value
-            'a': float(parts[3])   # Alpha (transparency)
-        }
-    return {}
 
 levels = []
 
@@ -140,13 +129,13 @@ for level in levels:
             except:
                 print(f'Property {key} not found!')if debug == 'y' else None
                 continue
-            
-            if isinstance(obj_json[key], str) and 'a' in obj_json[key]:
-                obj_json[key] = convert_hsv_to_rgb(obj_json[key])
 
             out_json[prop_index] = obj_json[key]
 
         level_code.append(out_json)
+
+    # strip level json down to the level data
+    level_train = level_code
 
     # get the last object
     last_obj = level_code[-1]
@@ -160,9 +149,9 @@ for level in levels:
         # 'raw': level_data_raw
     })
 
-    
-
     # save level train to data
+    with open(f'data/{name}.json', 'w') as f:
+        f.write(json.dumps(level_train))
 
     # save level json
     with open(f'levels/json/{name}.json', 'w') as f:
