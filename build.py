@@ -145,20 +145,7 @@ for level in levels:
         # 'raw': level_data_raw
     })
 
-    # convert the level data. This will be hell
-    level_train = []
-
-    for obj in level_code:
-        obj_data = []
-        for key in obj:
-            obj_data.append(obj[key])
-
-        obj_data = json.dumps(obj_data)
-
-        for item in obj_data:
-            item = float(item)
-            
-        level_train.append(obj_data)
+    
 
     # save level train
     with open(f'data/{name}.json', 'w') as f:
