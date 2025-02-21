@@ -140,6 +140,9 @@ for level in levels:
             except:
                 print(f'Property {key} not found!')if debug == 'y' else None
                 continue
+            
+            if isinstance(obj_json[key], str) and 'a' in obj_json[key]:
+                obj_json[key] = convert_hsv_to_rgb(obj_json[key])
 
             out_json[prop_index] = obj_json[key]
 
