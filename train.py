@@ -59,7 +59,6 @@ class GDDataset(torch.utils.data.Dataset):
             print("🚨 Warning: No valid sequences found!")
         return all_sequences
 
-
     def process_data(self, level_data):
         """Converts a Geometry Dash level JSON into a list of token IDs."""
         tokens = []
@@ -84,11 +83,13 @@ class GDDataset(torch.utils.data.Dataset):
             print(f"🚨 Warning: Could not find a valid sequence. Returning dummy data.")
             token_ids = [0, 0]
 
+        # Padding the sequence to max_length if necessary
+        token_ids = token_ids + [self.pad_value] * (self.max_length - len(token_ids))
+        
         return torch.tensor(token_ids, dtype=torch.long)
 
     def __len__(self):
         return len(self.data)
-
 
 
 # ==== TRAINING SETUP ====
@@ -123,16 +124,22 @@ for epoch in range(1, EPOCHS + 1):
     print(f"Epoch {epoch}/{EPOCHS}...")
     total_loss = 0
 
-    for input_seq, target in dataloader:
-        input_seq, target = input_seq.to(device), target.to(device)
+    for input_seq in dataloader:
+        input_seq = input_seq.to(device)
 
+        # Prepare the target by shifting the sequence
+        target = input_seq[:, 1:]  # Remove the first token
+        input_seq = input_seq[:, :-1]  # Remove the last token for input
+        
         optimizer.zero_grad()
         output = model(input_seq)
-        print(f"Output shape: {output.shape}")  # Debugging line
+        
         if output.shape[1] == 0:  # 🔥 Check if sequence is empty
             print("Warning: Empty output sequence, skipping...")
             continue
-        loss = criterion(output[:, -1, :], target)  # Predict last token
+        
+        # We are predicting the last token of the sequence (shifted target)
+        loss = criterion(output.view(-1, vocab_size), target.contiguous().view(-1))
 
         loss.backward()
         optimizer.step()
