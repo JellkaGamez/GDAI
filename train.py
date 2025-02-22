@@ -43,8 +43,10 @@ class GDDataset(torch.utils.data.Dataset):
     def load_data(self, folder):
         """Loads and processes JSON files from a folder into usable token sequences."""
         all_sequences = []
+        print(f"Loading data from folder: {folder}")
         for filename in os.listdir(folder):
             if filename.endswith(".json"):
+                print(f"Processing file: {filename}")
                 with open(os.path.join(folder, filename), "r", encoding="utf-8") as file:
                     try:
                         level_data = json.load(file)  # Load JSON
@@ -62,14 +64,17 @@ class GDDataset(torch.utils.data.Dataset):
     def process_data(self, level_data):
         """Converts a Geometry Dash level JSON into a list of token IDs."""
         tokens = []
+        print(f"Processing level data: {level_data}")  # Debug print
         for obj in level_data:  # Assume level_data["objects"] contains the level elements
             if isinstance(obj, dict) and "id" in obj:  # Check if object has an ID
                 obj_id = obj["id"]
                 tokens.append(obj_id)  # Append object ID as a token
+        print(f"Tokens extracted: {tokens}")  # Debug print
         return tokens
 
     def __getitem__(self, idx):
         token_ids = self.data[idx]
+        print(f"Sequence at index {idx}: {token_ids}")  # Debug print
 
         # Handle short sequences
         max_attempts = 10
