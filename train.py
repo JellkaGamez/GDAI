@@ -34,27 +34,39 @@ class GDTransformer(nn.Module):
         return x
 
 # ==== CUSTOM DATASET ====
-class GDDataset(Dataset):
-    def __init__(self, data_folder):
-        self.data = []
-        for file in os.listdir(data_folder):
-            if file.endswith(".json"):
-                with open(os.path.join(data_folder, file), "r") as f:
-                    self.data.extend(json.load(f))
+class GDDataset(torch.utils.data.Dataset):
+    def __init__(self, data, pad_value=0.0):
+        self.data = data
+        self.pad_value = pad_value
+        self.max_length = max(len(obj) for obj in data)  # Find longest sequence
+
+    def __getitem__(self, idx):
+        obj = self.data[idx]
+        token_ids = []
+
+        for pair in obj:
+            if ":" in pair:  # Ensure valid format
+                key, value = pair.split(":", 1)  # Split into two parts safely
+                try:
+                    token_ids.append(float(value) if "." in value else int(value))
+                except ValueError:
+                    print(f"Warning: Skipping invalid token '{pair}'")  # Debugging info
+                    token_ids.append(self.pad_value)  # Use padding for invalid data
+            else:
+                print(f"Warning: Skipping malformed token '{pair}'")  # Debugging info
+                token_ids.append(self.pad_value)
+
+        # Pad sequences to `max_length`
+        padded = token_ids + [self.pad_value] * (self.max_length - len(token_ids))
+
+        input_seq = torch.tensor(padded[:-1], dtype=torch.float)  # Everything except last token
+        target = torch.tensor(padded[-1], dtype=torch.float)  # Last token as target
+
+        return input_seq, target
 
     def __len__(self):
         return len(self.data)
 
-    def __getitem__(self, idx):
-        obj = self.data[idx]
-    
-        # Convert values dynamically (handle both ints & floats)
-        token_ids = [float(pair.split(":")[1]) if "." in pair.split(":")[1] else int(pair.split(":")[1]) for pair in obj]
-
-        input_seq = torch.tensor(token_ids[:-1], dtype=torch.float)  # All except last token
-        target = torch.tensor(token_ids[-1], dtype=torch.float)  # Last token as target
-    
-        return input_seq, target
 
 
 # ==== TRAINING SETUP ====
