@@ -6,8 +6,8 @@ import torch.optim as optim
 from torch.utils.data import DataLoader, Dataset
 
 # ==== HYPERPARAMETERS ====
-EPOCHS = 3
-BATCH_SIZE = 16
+EPOCHS = 1
+BATCH_SIZE = 2
 LEARNING_RATE = 0.001
 DATA_FOLDER = "data"
 FINAL_MODEL_PATH = "models/finals/gd_model.pth"
@@ -52,7 +52,7 @@ class GDDataset(Dataset):
                 with open(os.path.join(folder, filename), "r", encoding="utf-8") as file:
                     try:
                         level_data = json.load(file)  # Load JSON
-                        print(f"Loaded data from {filename}: {level_data}")  # Debug print
+                        # print(f"Loaded data from {filename}: {level_data}")  # Debug print
                         tokens = self.process_data(level_data)  # Convert to tokens
                         if tokens:  # Ensure valid sequence
                             all_sequences.append(tokens)
