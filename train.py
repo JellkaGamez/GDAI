@@ -34,7 +34,8 @@ class GDTransformer(nn.Module):
         return x
 
 # ==== CUSTOM DATASET ====
-class GDDataset(torch.utils.data.Dataset):
+# ==== CUSTOM DATASET ====
+class GDDataset(Dataset):
     def __init__(self, data_folder, pad_value=0):
         self.data = self.load_data(data_folder)  # Load JSON data
         self.pad_value = pad_value
@@ -44,12 +45,14 @@ class GDDataset(torch.utils.data.Dataset):
         """Loads and processes JSON files from a folder into usable token sequences."""
         all_sequences = []
         print(f"Loading data from folder: {folder}")
+        print(f"Files in folder: {os.listdir(folder)}")
         for filename in os.listdir(folder):
             if filename.endswith(".json"):
                 print(f"Processing file: {filename}")
                 with open(os.path.join(folder, filename), "r", encoding="utf-8") as file:
                     try:
                         level_data = json.load(file)  # Load JSON
+                        print(f"Loaded data from {filename}: {level_data}")  # Debug print
                         tokens = self.process_data(level_data)  # Convert to tokens
                         if tokens:  # Ensure valid sequence
                             all_sequences.append(tokens)
@@ -64,38 +67,34 @@ class GDDataset(torch.utils.data.Dataset):
     def process_data(self, level_data):
         """Converts a Geometry Dash level JSON into a list of token IDs."""
         tokens = []
-        print(f"Processing level data: {level_data}")  # Debug print
-        for obj in level_data:  # Assume level_data["objects"] contains the level elements
-            if isinstance(obj, dict) and "id" in obj:  # Check if object has an ID
-                obj_id = obj["id"]
-                tokens.append(obj_id)  # Append object ID as a token
-        print(f"Tokens extracted: {tokens}")  # Debug print
+        # print(f"Processing level data: {level_data}")  # Debug print
+        for obj in level_data:  # Assume level_data is a list of objects
+            if isinstance(obj, list):  # Check if the object is a list
+                # Extract the ID from the first element of the list
+                obj_id = obj[0].split(":")[1]  # Extract the ID from "id:1006"
+                tokens.append(int(obj_id))  # Append object ID as a token
+            else:
+                print(f"⚠️ Warning: Unexpected object format: {obj}")
+        # print(f"Tokens extracted: {tokens}")  # Debug print
         return tokens
 
     def __getitem__(self, idx):
         token_ids = self.data[idx]
-        print(f"Sequence at index {idx}: {token_ids}")  # Debug print
+        # print(f"Sequence at index {idx}: {token_ids}")  # Debug print
 
         # Handle short sequences
-        max_attempts = 10
-        attempts = 0
-        while len(token_ids) < 2 and attempts < max_attempts:
-            idx = (idx + 1) % len(self.data)
-            token_ids = self.data[idx]
-            attempts += 1
-
         if len(token_ids) < 2:
-            print(f"🚨 Warning: Could not find a valid sequence. Returning dummy data.")
-            token_ids = [0, 0]
+            print(f"🚨 Warning: Sequence too short. Padding with dummy data.")
+            token_ids = [0, 0]  # Use dummy data for short sequences
 
         # Padding the sequence to max_length if necessary
-        token_ids = token_ids + [self.pad_value] * (self.max_length - len(token_ids))
+        if len(token_ids) < self.max_length:
+            token_ids = token_ids + [self.pad_value] * (self.max_length - len(token_ids))
         
         return torch.tensor(token_ids, dtype=torch.long)
 
     def __len__(self):
         return len(self.data)
-
 
 # ==== TRAINING SETUP ====
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -110,6 +109,10 @@ num_classes = vocab_size  # Predicts the next token
 
 # Load dataset
 dataset = GDDataset(DATA_FOLDER)
+print(f"Dataset size: {len(dataset)}")
+print(f"Sample data: {dataset[0]}")  # Print the first sequence
+
+# Initialize DataLoader
 dataloader = DataLoader(dataset, batch_size=BATCH_SIZE, shuffle=True)
 
 # Initialize model
