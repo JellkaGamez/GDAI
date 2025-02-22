@@ -35,34 +35,51 @@ class GDTransformer(nn.Module):
 
 # ==== CUSTOM DATASET ====
 class GDDataset(torch.utils.data.Dataset):
-    def __init__(self, data, pad_value=0.0):
-        self.data = data
+    def __init__(self, data_folder, pad_value=0):
+        self.data = self.load_data(data_folder)  # Load JSON data
         self.pad_value = pad_value
-        self.max_length = max(len(obj) for obj in data)  # Find longest sequence
+        self.max_length = max(len(obj) for obj in self.data) if self.data else 1
+
+    def load_data(self, folder):
+        """Loads and processes JSON files from a folder into usable token sequences."""
+        all_sequences = []
+        for filename in os.listdir(folder):
+            if filename.endswith(".json"):
+                with open(os.path.join(folder, filename), "r", encoding="utf-8") as file:
+                    try:
+                        level_data = json.load(file)  # Load JSON
+                        tokens = self.process_data(level_data)  # Convert to tokens
+                        if tokens:  # Ensure valid sequence
+                            all_sequences.append(tokens)
+                    except json.JSONDecodeError:
+                        print(f"⚠️ Warning: Skipping invalid JSON file: {filename}")
+        return all_sequences
+
+    def process_data(self, level_data):
+        """Converts a Geometry Dash level JSON into a list of token IDs."""
+        tokens = []
+        for obj in level_data:  # Assume level_data["objects"] contains the level elements
+            if isinstance(obj, dict) and "id" in obj:  # Check if object has an ID
+                obj_id = obj["id"]
+                tokens.append(obj_id)  # Append object ID as a token
+        return tokens
 
     def __getitem__(self, idx):
-        obj = self.data[idx]
-        token_ids = []
+        token_ids = self.data[idx]
 
-        for pair in obj:
-            if ":" in pair:  # Ensure valid format
-                key, value = pair.split(":", 1)  # Split into two parts safely
-                try:
-                    token_ids.append(float(value) if "." in value else int(value))
-                except ValueError:
-                    print(f"Warning: Skipping invalid token '{pair}'")  # Debugging info
-                    token_ids.append(self.pad_value)  # Use padding for invalid data
-            else:
-                print(f"Warning: Skipping malformed token '{pair}'")  # Debugging info
-                token_ids.append(self.pad_value)
+        # Handle short sequences
+        max_attempts = 10
+        attempts = 0
+        while len(token_ids) < 2 and attempts < max_attempts:
+            idx = (idx + 1) % len(self.data)
+            token_ids = self.data[idx]
+            attempts += 1
 
-        # Pad sequences to `max_length`
-        padded = token_ids + [self.pad_value] * (self.max_length - len(token_ids))
+        if len(token_ids) < 2:
+            print(f"🚨 Warning: Could not find a valid sequence. Returning dummy data.")
+            token_ids = [0, 0]
 
-        input_seq = torch.tensor(padded[:-1], dtype=torch.float)  # Everything except last token
-        target = torch.tensor(padded[-1], dtype=torch.float)  # Last token as target
-
-        return input_seq, target
+        return torch.tensor(token_ids, dtype=torch.long)
 
     def __len__(self):
         return len(self.data)
@@ -106,7 +123,12 @@ for epoch in range(1, EPOCHS + 1):
 
         optimizer.zero_grad()
         output = model(input_seq)
+        print(f"Output shape: {output.shape}")  # Debugging line
+        if output.shape[1] == 0:  # 🔥 Check if sequence is empty
+            print("Warning: Empty output sequence, skipping...")
+            continue
         loss = criterion(output[:, -1, :], target)  # Predict last token
+
         loss.backward()
         optimizer.step()
 
