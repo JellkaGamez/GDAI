@@ -51,9 +51,14 @@ class GDDataset(torch.utils.data.Dataset):
                         tokens = self.process_data(level_data)  # Convert to tokens
                         if tokens:  # Ensure valid sequence
                             all_sequences.append(tokens)
+                        else:
+                            print(f"⚠️ Warning: Empty sequence in file: {filename}")
                     except json.JSONDecodeError:
                         print(f"⚠️ Warning: Skipping invalid JSON file: {filename}")
+        if not all_sequences:
+            print("🚨 Warning: No valid sequences found!")
         return all_sequences
+
 
     def process_data(self, level_data):
         """Converts a Geometry Dash level JSON into a list of token IDs."""
